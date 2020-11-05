@@ -26,11 +26,24 @@ namespace API.Controllers
                 SOUserName = savingObjectiveDto.username,
                 SOObjectives = JsonSerializer.Serialize(savingObjectiveDto.savingObjectives)
             };
-            var objectives = await _context.SavingObjectives.SingleOrDefaultAsync(x => x.SOUserName == savingObjectiveDto.username);
-            objectives.SOObjectives = objective.SOObjectives;
+
+            if(await UsersObjectivesExists(savingObjectiveDto.username)) 
+            {
+                var objectives = await _context.SavingObjectives.SingleOrDefaultAsync(x => x.SOUserName == savingObjectiveDto.username);
+                objectives.SOObjectives = objective.SOObjectives;
+            }
+            else
+            {
+                await _context.SavingObjectives.AddAsync(objective);
+            }
+
             await _context.SaveChangesAsync();
 
             return savingObjectiveDto.savingObjectives;
+        }
+        private async Task<bool> UsersObjectivesExists(string username)
+        {
+            return await _context.SavingObjectives.AnyAsync(x => x.SOUserName == username.ToLower());
         }
 
         [Authorize]
